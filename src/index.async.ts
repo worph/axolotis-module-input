@@ -5,7 +5,7 @@ import {InputService} from "./services/input/InputService";
 
 export * from "./Identifier";
 
-export class AxBasicModule implements AxModuleAsync{
+export class AxInputModule implements AxModuleAsync{
     getModule(): AsyncContainerModule {
         return new AsyncContainerModule(async (bind: interfaces.Bind) => {
             bind(InputServiceID).toDynamicValue(async () => {

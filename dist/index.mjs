@@ -4695,7 +4695,7 @@ var InputService = class {
 };
 
 // src/index.ts
-var AxBasicModule = class {
+var AxInputModule = class {
   getModule() {
     console.log("AxBasicModule installed 2");
     return new import_inversify.ContainerModule((bind) => {
@@ -4709,7 +4709,7 @@ var AxBasicModule = class {
   }
 };
 export {
-  AxBasicModule,
+  AxInputModule,
   InputServiceID
 };
 //# sourceMappingURL=index.mjs.map

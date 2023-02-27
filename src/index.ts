@@ -5,7 +5,7 @@ import {InputService} from "./services/input/InputService";
 
 export * from "./Identifier";
 
-export class AxBasicModule implements AxModule{
+export class AxInputModule implements AxModule{
     getModule(): ContainerModule {
         console.log("AxBasicModule installed 2");
         return new ContainerModule((bind: interfaces.Bind) => {
