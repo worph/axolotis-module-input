@@ -87,6 +87,5 @@ export declare class InputService {
     registerScalarEvent(actionName: string, callback: (event: ScalarEvent) => void): () => void;
     registerBooleanEvent(actionName: string, callback: (event: BooleanEvent) => void): () => void;
     private registerGeneric;
-    getType(): string;
 }
 //# sourceMappingURL=InputService.d.ts.map

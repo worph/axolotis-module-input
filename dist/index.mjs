@@ -4418,9 +4418,61 @@ var require_inversify = __commonJS({
 var import_inversify = __toESM(require_inversify(), 1);
 
 // src/Identifier.ts
-var InputServiceID = Symbol.for("InputServiceID");
+var InputServiceName = Symbol.for("InputServiceName");
 
 // src/services/input/InputService.ts
+var KeyboardKey = class {
+  constructor(keyCode, type = "any") {
+    this.keyCode = keyCode;
+    this.type = type;
+  }
+  getType() {
+    return "keyboard";
+  }
+};
+var MouseButton = class {
+  constructor(btn = "Mouse-0", type = "any") {
+    this.btn = btn;
+    this.type = type;
+  }
+  getType() {
+    return "mouse_click";
+  }
+};
+var MouseWheel = class {
+  constructor(type = "any") {
+    this.type = type;
+  }
+  getType() {
+    return "mouse_wheel";
+  }
+};
+var MouseAxis = class {
+  constructor(type = "x") {
+    this.type = type;
+  }
+  getType() {
+    return "mouse_axis";
+  }
+};
+var Compound1DInput = class {
+  constructor(eventXPositive, eventXNegative) {
+    this.eventXPositive = eventXPositive;
+    this.eventXNegative = eventXNegative;
+  }
+  getType() {
+    return "compound_1d";
+  }
+};
+var Compound2DInput = class {
+  constructor(eventX, eventY) {
+    this.eventX = eventX;
+    this.eventY = eventY;
+  }
+  getType() {
+    return "compound_2d";
+  }
+};
 var MouseManager = class {
   constructor(parent) {
     this.parent = parent;
@@ -4689,20 +4741,13 @@ var InputService = class {
       });
     };
   }
-  getType() {
-    return InputService.name;
-  }
 };
 
 // src/index.ts
 var AxInputModule = class {
   getModule() {
-    console.log("AxBasicModule installed 2");
     return new import_inversify.ContainerModule((bind) => {
-      bind(InputService.name).toDynamicValue(() => {
-        return new InputService();
-      }).inSingletonScope();
-      bind(InputServiceID).toDynamicValue(() => {
+      bind(InputServiceName).toDynamicValue(() => {
         return new InputService();
       }).inSingletonScope();
     });
@@ -4710,6 +4755,13 @@ var AxInputModule = class {
 };
 export {
   AxInputModule,
-  InputServiceID
+  Compound1DInput,
+  Compound2DInput,
+  InputService,
+  InputServiceName,
+  KeyboardKey,
+  MouseAxis,
+  MouseButton,
+  MouseWheel
 };
 //# sourceMappingURL=index.mjs.map

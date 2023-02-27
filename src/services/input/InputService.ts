@@ -402,8 +402,4 @@ export class InputService {
         }
     }
 
-    getType(): string {
-        return InputService.name;
-    }
-
 }

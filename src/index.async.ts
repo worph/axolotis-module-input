@@ -1,6 +1,6 @@
 import {AxModuleAsync} from "axolotis-module-definition";
 import {AsyncContainerModule, interfaces} from "inversify";
-import {InputServiceID} from "./Identifier";
+import {InputServiceName} from "./Identifier";
 import {InputService} from "./services/input/InputService";
 
 export * from "./Identifier";
@@ -8,7 +8,7 @@ export * from "./Identifier";
 export class AxInputModule implements AxModuleAsync{
     getModule(): AsyncContainerModule {
         return new AsyncContainerModule(async (bind: interfaces.Bind) => {
-            bind(InputServiceID).toDynamicValue(async () => {
+            bind(InputServiceName).toDynamicValue(async () => {
                 return new InputService()
             }).inSingletonScope();
 
