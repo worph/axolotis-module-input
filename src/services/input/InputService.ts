@@ -100,6 +100,9 @@ class MouseManager {
         el.addEventListener('mouseup', (evt) => {
             this.checkMouseEvent(evt, "mouseup");
         });
+        el.addEventListener('mouseout', (evt) => {
+            this.checkMouseEvent(evt, "mouseup");
+        });
         el.addEventListener("mousemove", (evt) => {
             for (const action in this.parent.inputList) {
                 for (const keyListElementElement of this.parent.inputList[action]) {
