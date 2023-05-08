@@ -4691,10 +4691,12 @@ var InputService = class {
     }
   }
   notifyBoolean(id, event) {
-    this.booleanState[id] = event;
-    if (this.booleanCallbackList[id]) {
-      for (const boolCallBack of this.booleanCallbackList[id]) {
-        boolCallBack(event);
+    if (this.booleanState[id] ? this.booleanState[id].state != event.state : true) {
+      this.booleanState[id] = event;
+      if (this.booleanCallbackList[id]) {
+        for (const boolCallBack of this.booleanCallbackList[id]) {
+          boolCallBack(event);
+        }
       }
     }
   }

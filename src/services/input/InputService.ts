@@ -320,10 +320,12 @@ export class InputService {
 
     notifyBoolean(id: string, event: BooleanEvent) {
         // We have found the action : find it in the callback list
-        this.booleanState[id] = event;
-        if (this.booleanCallbackList[id]) {
-            for (const boolCallBack of this.booleanCallbackList[id]) {
-                boolCallBack(event);
+        if(this.booleanState[id]?(this.booleanState[id].state != event.state):true) {//only notify on state change
+            this.booleanState[id] = event;
+            if (this.booleanCallbackList[id]) {
+                for (const boolCallBack of this.booleanCallbackList[id]) {
+                    boolCallBack(event);
+                }
             }
         }
     }
