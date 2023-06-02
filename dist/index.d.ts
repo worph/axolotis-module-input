@@ -5,40 +5,6 @@ type InputType = "keyboard" | "compound_1d" | "compound_2d" | "mouse_click" | "m
 interface Input {
     getType(): InputType;
 }
-declare class KeyboardKey implements Input {
-    keyCode: string;
-    type: "keyup" | "keydown" | "any";
-    constructor(keyCode: string, type?: "keyup" | "keydown" | "any");
-    getType(): InputType;
-}
-declare class MouseButton implements Input {
-    btn: "Mouse-0" | "Mouse-1" | "Mouse-2" | "Mouse-3" | "Mouse-4";
-    type: "mousedown" | "mouseup" | "any";
-    constructor(btn?: "Mouse-0" | "Mouse-1" | "Mouse-2" | "Mouse-3" | "Mouse-4", type?: "mousedown" | "mouseup" | "any");
-    getType(): InputType;
-}
-declare class MouseWheel implements Input {
-    type: "up" | "down" | "any";
-    constructor(type?: "up" | "down" | "any");
-    getType(): InputType;
-}
-declare class MouseAxis implements Input {
-    type: "x" | "y";
-    constructor(type?: "x" | "y");
-    getType(): InputType;
-}
-declare class Compound1DInput implements Input {
-    eventXPositive: string;
-    eventXNegative: string;
-    constructor(eventXPositive: string, eventXNegative: string);
-    getType(): InputType;
-}
-declare class Compound2DInput implements Input {
-    eventX: string;
-    eventY: string;
-    constructor(eventX: string, eventY: string);
-    getType(): InputType;
-}
 interface BooleanEvent {
     actionName: string;
     state: boolean;
@@ -57,10 +23,28 @@ interface Scalar2DEvent {
     };
     sourceEvt: any;
 }
-declare class InputService {
-    inputList: {
+
+interface Notifier {
+    notifyBoolean(id: string, event: BooleanEvent): any;
+    notifyScalar(id: string, event: ScalarEvent): any;
+    notify2DScalar(id: string, event: Scalar2DEvent): any;
+    getBooleanValue(actionName: string): boolean;
+    getScalarValue(actionName: string): number;
+    getScalar2DValue(actionName: string): {
+        x: number;
+        y: number;
+    };
+    getBooleanEvent(actionName: string): BooleanEvent;
+    getScalarEvent(actionName: string): ScalarEvent;
+    getScalar2DEvent(actionName: string): Scalar2DEvent;
+    getActionList(): {
         [id: string]: Input[];
     };
+}
+
+type RaiseType = "UP" | "DOWN" | "ANY";
+declare class InputService implements Notifier {
+    inputList: Record<string, Input[]>;
     private booleanCallbackList;
     private scalarCallbackList;
     private scalar2DCallbackList;
@@ -88,14 +72,74 @@ declare class InputService {
     getScalar2DEvent(actionName: string): Scalar2DEvent;
     register2DScalarEvent(actionName: string, callback: (event: Scalar2DEvent) => void): () => void;
     registerScalarEvent(actionName: string, callback: (event: ScalarEvent) => void): () => void;
-    registerBooleanEvent(actionName: string, callback: (event: BooleanEvent) => void): () => void;
+    registerBooleanEvent(actionName: string, callback: (event: BooleanEvent) => void, type?: RaiseType): () => void;
     private registerGeneric;
+    getActionList(): {
+        [key: string]: Input[];
+    };
 }
 
 declare const InputServiceName: unique symbol;
+
+declare class Compound1DInput implements Input {
+    eventXPositive: string;
+    eventXNegative: string;
+    constructor(eventXPositive: string, eventXNegative: string);
+    getType(): InputType;
+}
+declare class Compound2DInput implements Input {
+    eventX: string;
+    eventY: string;
+    constructor(eventX: string, eventY: string);
+    getType(): InputType;
+}
+
+declare class KeyboardKey implements Input {
+    keyCode: string;
+    constructor(keyCode: string);
+    getType(): InputType;
+}
+
+declare class MouseButton implements Input {
+    btn: "Mouse-0" | "Mouse-1" | "Mouse-2" | "Mouse-3" | "Mouse-4";
+    constructor(btn?: "Mouse-0" | "Mouse-1" | "Mouse-2" | "Mouse-3" | "Mouse-4");
+    getType(): InputType;
+}
+
+declare class MouseWheel implements Input {
+    type: "up" | "down" | "any";
+    constructor(type?: "up" | "down" | "any");
+    getType(): InputType;
+}
+
+declare class MouseAxis implements Input {
+    type: "x" | "y";
+    constructor(type?: "x" | "y");
+    getType(): InputType;
+}
+
+declare class CompoundManager {
+    private parent;
+    constructor(parent: Notifier);
+    notifyActionOn(id: string): void;
+}
+
+declare class KeyboardManager {
+    private parent;
+    setupListeners(): void;
+    constructor(parent: Notifier);
+    private checkKeyBoardEvent;
+}
+
+declare class MouseManager {
+    private parent;
+    setupListeners(el: HTMLElement): void;
+    constructor(parent: Notifier);
+    private checkMouseEvent;
+}
 
 declare class AxInputModule implements AxModule {
     getModule(): ContainerModule;
 }
 
-export { AxInputModule, BooleanEvent, Compound1DInput, Compound2DInput, Input, InputService, InputServiceName, InputType, KeyboardKey, MouseAxis, MouseButton, MouseWheel, Scalar2DEvent, ScalarEvent };
+export { AxInputModule, BooleanEvent, Compound1DInput, Compound2DInput, CompoundManager, Input, InputService, InputServiceName, InputType, KeyboardKey, KeyboardManager, MouseAxis, MouseButton, MouseManager, MouseWheel, RaiseType, Scalar2DEvent, ScalarEvent };

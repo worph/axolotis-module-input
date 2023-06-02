@@ -1,283 +1,26 @@
-export type InputType = "keyboard" | "compound_1d" | "compound_2d" | "mouse_click" | "mouse_wheel" | "mouse_axis";
+import {BooleanEvent, Input, Scalar2DEvent, ScalarEvent} from "../events/InputEvent";
+import {CompoundManager} from "../manager/CompoundManager";
+import {KeyboardManager} from "../manager/KeyboardManager";
+import {MouseManager} from "../manager/MouseManager";
+import {Notifier} from "../manager/Notifier";
 
-export interface Input {
-    getType(): InputType;
-}
+export type RaiseType = "UP" | "DOWN" | "ANY";
 
-export class KeyboardKey implements Input {
-    /**
-     *
-     * @param keyCode https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values
-     * @param type
-     */
-    constructor(public keyCode: string, public type: "keyup" | "keydown" | "any" = "any") {
+export class InputService implements Notifier {
+    public inputList: Record<string, Input[]> = {};
 
-    }
+    private booleanCallbackList: Record<string,
+        {
+            type: RaiseType,
+            callback: ((event: BooleanEvent) => void)
+        }[]
+    > = {};
+    private scalarCallbackList: Record<string, ((event: ScalarEvent) => void)[]> = {};
+    private scalar2DCallbackList: Record<string, ((event: Scalar2DEvent) => void)[]> = {};
 
-    getType(): InputType {
-        return "keyboard";
-    }
-}
-
-export class MouseButton implements Input {
-    constructor(
-        public btn: "Mouse-0" | "Mouse-1" | "Mouse-2" | "Mouse-3" | "Mouse-4" = "Mouse-0",
-        public type: "mousedown" | "mouseup" | "any" = "any") {
-    }
-
-    getType(): InputType {
-        return "mouse_click";
-    }
-}
-
-export class MouseWheel implements Input {
-    constructor(public type: "up" | "down" | "any" = "any") {
-    }
-
-    getType(): InputType {
-        return "mouse_wheel";
-    }
-}
-
-export class MouseAxis implements Input {
-    constructor(public type: "x" | "y" = "x") {
-    }
-
-    getType(): InputType {
-        return "mouse_axis";
-    }
-}
-
-export class Compound1DInput implements Input {
-    constructor(public eventXPositive: string, public eventXNegative: string) {
-    }
-
-    getType(): InputType {
-        return "compound_1d";
-    }
-
-}
-
-export class Compound2DInput implements Input {
-    constructor(public eventX: string, public eventY: string) {
-    }
-
-    getType(): InputType {
-        return "compound_2d";
-    }
-
-}
-
-/*
-Event kind
- */
-
-export interface BooleanEvent {
-    actionName: string,
-    state: boolean,
-    sourceEvt: any
-}
-
-export interface ScalarEvent {
-    actionName: string,
-    state: number,
-    sourceEvt: any
-}
-
-export interface Scalar2DEvent {
-    actionName: string,
-    state: { x: number, y: number },
-    sourceEvt: any
-}
-
-
-class MouseManager {
-    setupListeners(el: HTMLElement) {
-
-        el.addEventListener('mousedown', (evt) => {
-            this.checkMouseEvent(evt, "mousedown");
-        });
-        el.addEventListener('mouseup', (evt) => {
-            this.checkMouseEvent(evt, "mouseup");
-        });
-        el.addEventListener('mouseout', (evt) => {
-            this.checkMouseEvent(evt, "mouseup");
-        });
-        el.addEventListener("mousemove", (evt) => {
-            for (const action in this.parent.inputList) {
-                for (const keyListElementElement of this.parent.inputList[action]) {
-                    if (keyListElementElement.getType() === "mouse_axis") {
-                        let input = keyListElementElement as MouseAxis;
-                        if (input.type === "x") {
-                            this.parent.notifyScalar(action, {
-                                sourceEvt: evt,
-                                actionName: action,
-                                state: evt.offsetX,
-                            });
-                        }
-                        if (input.type === "y") {
-                            this.parent.notifyScalar(action, {
-                                sourceEvt: evt,
-                                actionName: action,
-                                state: evt.offsetY,
-                            });
-                        }
-                    }
-                }
-            }
-        });
-        el.addEventListener("wheel", (evt: any) => {
-            for (const action in this.parent.inputList) {
-                for (const keyListElementElement of this.parent.inputList[action]) {
-                    if (keyListElementElement.getType() === "mouse_wheel") {
-                        let input = keyListElementElement as MouseWheel;
-                        if (input.type === "up") {
-                            throw new Error("not yet implemented");
-                        }
-                        if (input.type === "down") {
-                            throw new Error("not yet implemented");
-                        }
-                        this.parent.notifyScalar(action, {
-                            sourceEvt: evt,
-                            actionName: action,
-                            state: evt.deltaY,
-                        });
-                    }
-                }
-            }
-        });
-    }
-
-    // CONSTRUCTOR
-    public constructor(private parent: InputService) {
-
-    }
-
-    private checkMouseEvent(evt: MouseEvent, state: string) {
-        //https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
-        let key = "Mouse-" + evt.button;
-        for (const action in this.parent.inputList) {
-            for (const keyListElementElement of this.parent.inputList[action]) {
-                if (keyListElementElement.getType() === "mouse_click") {
-                    let input = keyListElementElement as MouseButton;
-                    if (input.btn == key && (state === input.type || input.type === "any")) {
-                        this.parent.notifyBoolean(action, {
-                            sourceEvt: evt,
-                            actionName: action,
-                            state: state === "mousedown",//mousedown = true, mouseup = false
-                        });
-                        this.parent.notifyScalar(action, {
-                            sourceEvt: evt,
-                            actionName: action,
-                            state: state === "mousedown" ? 1.0 : 0.0,//mousedown = 1.0, mouseup = 0.0
-                        });
-                    }
-                }
-            }
-        }
-    }
-}
-
-class KeyboardManager {
-    setupListeners() {
-        // KEY UP LISTENER
-        window.addEventListener('keyup', (evt) => {
-            this.checkKeyBoardEvent(evt);
-        });
-        // KEY DOWN LISTENER
-        window.addEventListener('keydown', (evt) => {
-            this.checkKeyBoardEvent(evt);
-        });
-    }
-
-    // CONSTRUCTOR
-    public constructor(private parent: InputService) {
-    }
-
-    private checkKeyBoardEvent(evt: KeyboardEvent) {
-        // check this is not a repeat
-        if (evt.repeat == false) {
-            // look for event in the key list
-            for (const action in this.parent.inputList) {
-                for (const keyListElementElement of this.parent.inputList[action]) {
-                    if (keyListElementElement.getType() === "keyboard") {
-                        let input = keyListElementElement as KeyboardKey;
-                        if (input.keyCode == evt.code && (evt.type === input.type || input.type === "any")) {
-                            this.parent.notifyBoolean(action, {
-                                sourceEvt: evt,
-                                actionName: action,
-                                state: evt.type === "keydown",//keydown = true, keyup = false
-                            });
-                            this.parent.notifyScalar(action, {
-                                sourceEvt: evt,
-                                actionName: action,
-                                state: evt.type === "keydown" ? 1.0 : 0.0,//keydown = 1.0, keyup = 0.0
-                            });
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-}
-
-class CompoundManager {
-    // CONSTRUCTOR
-    public constructor(private parent: InputService) {
-
-    }
-
-    public notifyActionOn(id: string) {
-        // look for event in the key list
-        for (const action in this.parent.inputList) {
-            for (const keyListElementElement of this.parent.inputList[action]) {
-                if (keyListElementElement.getType() === "compound_1d") {
-                    let input = keyListElementElement as Compound1DInput;
-                    if (input.eventXPositive === id || input.eventXNegative === id) {
-                        let eventXPos = this.parent.getScalarEvent(input.eventXPositive);
-                        let eventXNeg = this.parent.getScalarEvent(input.eventXNegative);
-                        if (eventXPos && eventXNeg) {
-                            this.parent.notifyScalar(action, {
-                                sourceEvt: {eventXPos, eventXNeg},
-                                actionName: action,
-                                state: eventXPos.state - eventXNeg.state
-                            });
-                        }
-                    }
-                }
-                if (keyListElementElement.getType() === "compound_2d") {
-                    let input = keyListElementElement as Compound2DInput;
-                    if (input.eventX === id || input.eventY === id) {
-                        let eventX = this.parent.getScalarEvent(input.eventX);
-                        let eventY = this.parent.getScalarEvent(input.eventY);
-                        if (eventX && eventY) {
-                            this.parent.notify2DScalar(action, {
-                                sourceEvt: {eventX, eventY},
-                                actionName: action,
-                                state: {
-                                    x: eventX.state,
-                                    y: eventY.state,
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-export class InputService {
-    public inputList: { [id: string]: Input[] } = {};
-
-    private booleanCallbackList: { [id: string]: ((event: BooleanEvent) => void)[] } = {};
-    private scalarCallbackList: { [id: string]: ((event: ScalarEvent) => void)[] } = {};
-    private scalar2DCallbackList: { [id: string]: ((event: Scalar2DEvent) => void)[] } = {};
-
-    private booleanState: { [id: string]: BooleanEvent } = {};
-    private scalarState: { [id: string]: ScalarEvent } = {};
-    private scalar2DState: { [id: string]: Scalar2DEvent } = {};
+    private booleanState: Record<string, BooleanEvent> = {};
+    private scalarState: Record<string, ScalarEvent> = {};
+    private scalar2DState: Record<string, Scalar2DEvent> = {};
 
     private compoundManager: CompoundManager;
     private keyboardManager: KeyboardManager;
@@ -320,11 +63,15 @@ export class InputService {
 
     notifyBoolean(id: string, event: BooleanEvent) {
         // We have found the action : find it in the callback list
-        if(this.booleanState[id]?(this.booleanState[id].state != event.state):true) {//only notify on state change
-            this.booleanState[id] = event;
-            if (this.booleanCallbackList[id]) {
-                for (const boolCallBack of this.booleanCallbackList[id]) {
-                    boolCallBack(event);
+        this.booleanState[id] = event;
+        if (this.booleanCallbackList[id]) {
+            for (const boolCallBack of this.booleanCallbackList[id]) {
+                if(event.sourceEvt.type === "keyup" && boolCallBack.type==="UP"){
+                    boolCallBack.callback(event);
+                }else if(event.sourceEvt.type === "keydown" && boolCallBack.type==="DOWN"){
+                    boolCallBack.callback(event);
+                }else if(boolCallBack.type==="ANY"){
+                    boolCallBack.callback(event);
                 }
             }
         }
@@ -383,18 +130,31 @@ export class InputService {
     }
 
     public register2DScalarEvent(actionName: string, callback: (event: Scalar2DEvent) => void) {
-        return this.registerGeneric<Scalar2DEvent>(this.scalar2DCallbackList,actionName,callback);
+        return this.registerGeneric<Scalar2DEvent>(this.scalar2DCallbackList, actionName, callback);
     }
 
     public registerScalarEvent(actionName: string, callback: (event: ScalarEvent) => void) {
-        return this.registerGeneric<ScalarEvent>(this.scalarCallbackList,actionName,callback);
+        return this.registerGeneric<ScalarEvent>(this.scalarCallbackList, actionName, callback);
     }
 
-    public registerBooleanEvent(actionName: string, callback: (event: BooleanEvent) => void): () => void {
-        return this.registerGeneric<BooleanEvent>(this.booleanCallbackList,actionName,callback);
+    public registerBooleanEvent(actionName: string, callback: (event: BooleanEvent) => void, type: RaiseType = "ANY"): () => void {
+        let list = this.booleanCallbackList;
+        let data = {callback, type};
+        // Check the action name callback is already registered
+        if (!list[actionName]) {
+            list[actionName] = [];
+        }
+        list[actionName].push(data);
+        return () => {
+            list[actionName].filter(value => {
+                return value != data;
+            })
+        }
     }
 
-    private registerGeneric<T>(list: { [id: string]: ((event: T) => void)[] }, actionName: string, callback: (event: T) => void): () => void {
+    private registerGeneric<T>(list: {
+        [id: string]: ((event: T) => void)[]
+    }, actionName: string, callback: (event: T) => void): () => void {
         // Check the action name callback is already registered
         if (!list[actionName]) {
             list[actionName] = [];
@@ -405,6 +165,10 @@ export class InputService {
                 return value != callback;
             })
         }
+    }
+
+    getActionList(): { [key: string]: Input[] } {
+        return this.inputList;
     }
 
 }
