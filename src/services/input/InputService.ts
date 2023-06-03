@@ -63,18 +63,22 @@ export class InputService implements Notifier {
 
     notifyBoolean(id: string, event: BooleanEvent) {
         // We have found the action : find it in the callback list
-        this.booleanState[id] = event;
         if (this.booleanCallbackList[id]) {
-            for (const boolCallBack of this.booleanCallbackList[id]) {
-                if(event.sourceEvt.type === "keyup" && boolCallBack.type==="UP"){
-                    boolCallBack.callback(event);
-                }else if(event.sourceEvt.type === "keydown" && boolCallBack.type==="DOWN"){
-                    boolCallBack.callback(event);
-                }else if(boolCallBack.type==="ANY"){
-                    boolCallBack.callback(event);
+            //mouseOutEvent can produce a up event when the state is up already so we have to filter this case
+            if (this.booleanState[id] ? (this.booleanState[id].state !== event.state) : event.state) {
+                for (const boolCallBack of this.booleanCallbackList[id]) {
+                    if (event.sourceEvt.type === "keyup" && boolCallBack.type === "UP") {
+                        boolCallBack.callback(event);
+                    } else if (event.sourceEvt.type === "keydown" && boolCallBack.type === "DOWN") {
+                        boolCallBack.callback(event);
+                    } else if (boolCallBack.type === "ANY") {
+                        boolCallBack.callback(event);
+                    }
                 }
             }
         }
+        //update the state after the check for state change
+        this.booleanState[id] = event;
     }
 
     public register(actionName: string, inputObject: Input) {
